@@ -1,0 +1,27 @@
+; Keyboard Driver - Direct I/O Port Access
+; This handles the raw scancodes from the keyboard controller.
+
+keyboard_handler:
+    in al, 0x60             ; Read scancode from port 0x60
+    cmp al, 0x01            ; ESC key?
+    je .exit
+    
+    ; Convert scancode to ASCII
+    mov bx, scan_table      ; Load address of our translation table
+    xlatb                   ; AL = [BX + AL] (Translate)
+    
+    ; Print the character
+    mov ah, 0x0E
+    int 0x10
+    
+    jmp keyboard_handler    ; Wait for next scan
+
+.exit:
+    hlt                     ; Stop
+
+; Simple Scancode-to-ASCII Translation Table
+scan_table:
+    ; Index 0x00 to 0x1E
+    db 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0
+    db 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 13, 0, 'a', 's'
+    ; ... (Table continues for all keys)
